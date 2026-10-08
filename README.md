@@ -6,245 +6,181 @@
 
 ![FastAPI Swagger UI](Screenshots/Swagger-UI.png)
 
-## Overview
+# FastAPI Product Management Task
 
-This project is a full-stack web application built using **FastAPI**, **React**, **SQLAlchemy**, and **MySQL**.
 
-The application provides a REST API for managing products and a React-based frontend for displaying and interacting with the product data.
+## 1. Project Architecture
 
-The project was developed as a practical exercise to understand how a modern backend API connects with a frontend application and a relational database.
+### Local Development
+
+```text
+Browser
+   |
+   v
+React Frontend :3000
+   |
+   | HTTP / Axios
+   v
+FastAPI :8000
+   |
+   v
+SQLAlchemy
+   |
+   v
+MySQL
+```
+
+### Kubernetes Deployment
+
+```text
+                         Client
+                           |
+                           v
+                  NGINX Ingress Controller
+                           |
+                           v
+                  Ingress: fastapi.local
+                           |
+                           v
+              ClusterIP Service :8000
+                           |
+                +----------+----------+
+                |                     |
+                v                     v
+        FastAPI Pod             FastAPI Pod
+        Worker Node             Worker Node
+                |                     |
+                +----------+----------+
+                           |
+                           v
+                    MySQL Service
+                           |
+                           v
+                     MySQL Pod
+                    StatefulSet
+                           |
+                           v
+                     MySQL PVC
+                           |
+                           v
+                     MySQL PV
+                  /data/mysql
+```
 
 ### Application Flow
 
 ```text
-React Frontend
-      ↓
-   HTTP / Axios
-      ↓
-FastAPI Backend
-      ↓
-   SQLAlchemy
-      ↓
-    MySQL
+Client
+  ↓
+NGINX Ingress
+  ↓
+FastAPI ClusterIP Service
+  ↓
+FastAPI Pods
+  ↓
+MySQL ClusterIP Service
+  ↓
+MySQL StatefulSet
+  ↓
+Persistent Volume
 ```
 
+---
 
-## Technologies Used
+# 2. Technologies
 
-| Technology | Purpose                                      |
-| ---------- | -------------------------------------------- |
-| Python     | Backend programming language                 |
-| FastAPI    | Building the REST API                        |
-| Uvicorn    | Running the FastAPI application server       |
-| Pydantic   | Request and response data validation         |
-| SQLAlchemy | ORM for database interaction                 |
-| PyMySQL    | Connecting Python/SQLAlchemy to MySQL        |
-| MySQL      | Relational database                          |
-| React      | Frontend user interface                      |
-| HTML / CSS | Frontend structure and styling               |
-| Git        | Version control                              |
-| GitHub     | Source code repository                       |
+| Technology    | Purpose                          |
+| ------------- | -------------------------------- |
+| Python        | Backend programming              |
+| FastAPI       | REST API                         |
+| Uvicorn       | ASGI application server          |
+| Pydantic      | Request/response validation      |
+| SQLAlchemy    | Database ORM                     |
+| PyMySQL       | MySQL connectivity               |
+| MySQL         | Application database             |
+| React         | Frontend                         |
+| Axios         | API communication                |
+| Docker        | Containerization                 |
+| Kubernetes    | Container orchestration          |
+| Helm          | Kubernetes application packaging |
+| NGINX Ingress | External HTTP routing            |
+| Git / GitHub  | Source control                   |
 
-## Project Structure
+---
+
+# 3. Repository Structure
 
 ```text
-Fast API/
+Fast_API-Project/
 │
 ├── frontend/
 │   ├── main.py
 │   ├── models.py
 │   ├── database.py
-│   ├── database_models.py
-│   │
-│   ├── package.json
-│   ├── package-lock.json
-│   │
-│   ├── public/
-│   │   ├── index.html
-│   │   └── manifest.json
-│   │
-│   └── src/
-│       ├── App.js
-│       ├── App.css
-│       ├── TaglineSection.js
-│       ├── TaglineSection.css
-│       ├── index.js
-│       └── index.css
+│   └── database_models.py
 │
-├── Screenshots/
-│   ├── Frontend-Dashboard.png
-│   └── Swagger-UI.png
+├── Practice/
 │
+├── kubernetes/
+│   ├── mysql/
+│   │   ├── pv.yaml
+│   │   ├── pvc.yaml
+│   │   ├── service.yaml
+│   │   └── statefulset.yaml
+│   │
+│   └── fastapi/
+│       └── deployment.yaml
+│
+├── helm/
+│   └── fastapi/
+│       ├── Chart.yaml
+│       ├── values.yaml
+│       ├── .helmignore
+│       │
+│       └── templates/
+│           ├── _helpers.tpl
+│           ├── deployment.yaml
+│           ├── hpa.yaml
+│           ├── ingress.yaml
+│           ├── service.yaml
+│           └── tests/
+│               └── test-connection.yaml
+│
+├── Dockerfile
+├── .dockerignore
 ├── .gitignore
-├── README.md
 ├── requirements.txt
-└── package-lock.json
-```
-
-### Backend Files
-
-| File                 | Purpose                                                       |
-| -------------------- | ------------------------------------------------------------- |
-| `main.py`            | Creates the FastAPI application and defines API endpoints     |
-| `models.py`          | Defines the Pydantic `Product` model used for validation      |
-| `database.py`        | Configures the SQLAlchemy database engine and session factory |
-| `database_models.py` | Defines the SQLAlchemy database model and `product` table     |
-
-### Frontend
-
-The React frontend is located inside the `frontend/` directory.
-
-It communicates with the FastAPI backend through HTTP requests and displays the product information returned by the API.
-
-
-
-
-
-## API Endpoints
-
-The FastAPI backend provides CRUD operations for managing products.
-
-**Base URL:**
-
-```text
-http://127.0.0.1:8000
-```
-
-### 1. Get All Products
-
-```http
-GET /products
-```
-
-Returns all products stored in the MySQL database.
-
-Example:
-
-```text
-GET http://127.0.0.1:8000/products
+├── package-lock.json
+└── README.md
 ```
 
 ---
 
-### 2. Get Product by ID
+# 4. FastAPI Application
 
-```http
-GET /product/{id}
-```
+The backend provides CRUD APIs for managing products.
 
-Returns a specific product using its ID.
+### API Endpoints
 
-Example:
+| Method | Endpoint         | Purpose          |
+| ------ | ---------------- | ---------------- |
+| GET    | `/products`      | Get all products |
+| GET    | `/product/{id}`  | Get a product    |
+| POST   | `/products`      | Create a product |
+| PUT    | `/products/{id}` | Update a product |
+| DELETE | `/products/{id}` | Delete a product |
 
-```text
-GET http://127.0.0.1:8000/product/2
-```
-
-The `{id}` value is a path parameter.
-
----
-
-### 3. Create a Product
-
-```http
-POST /products
-```
-
-Creates a new product in the database.
-
-Example request body:
-
-```json
-{
-  "id": 10,
-  "name": "Keyboard",
-  "description": "Mechanical keyboard",
-  "price": 2500,
-  "quantity": 20
-}
-```
-
-The request data is validated using the Pydantic `Product` model before being stored in MySQL.
-
----
-
-### 4. Update a Product
-
-```http
-PUT /products/{id}
-```
-
-Updates an existing product using its ID.
-
-Example:
-
-```text
-PUT http://127.0.0.1:8000/products/2
-```
-
-Example request body:
-
-```json
-{
-  "id": 2,
-  "name": "MacBook",
-  "description": "Updated product description",
-  "price": 189000,
-  "quantity": 10
-}
-```
-
----
-
-### 5. Delete a Product
-
-```http
-DELETE /products/{id}
-```
-
-Deletes a product from the database using its ID.
-
-Example:
-
-```text
-DELETE http://127.0.0.1:8000/products/2
-```
-
----
-
-## CRUD Operations
-
-The API follows the basic CRUD pattern:
-
-| Operation | HTTP Method | Endpoint         | Purpose           |
-| --------- | ----------- | ---------------- | ----------------- |
-| Create    | POST        | `/products`      | Add a new product |
-| Read      | GET         | `/products`      | Get all products  |
-| Read      | GET         | `/product/{id}`  | Get one product   |
-| Update    | PUT         | `/products/{id}` | Update a product  |
-| Delete    | DELETE      | `/products/{id}` | Delete a product  |
-
-## Interactive API Documentation
-
-FastAPI automatically provides interactive API documentation through Swagger UI.
-
-When the backend is running, open:
+FastAPI automatically provides Swagger documentation at:
 
 ```text
 http://127.0.0.1:8000/docs
 ```
 
-Swagger UI can be used to test the available API endpoints directly from the browser.
+---
 
+# 5. Database
 
-
-## Database
-
-This project uses **MySQL** as the relational database.
-
-**SQLAlchemy** is used as the ORM (Object Relational Mapper) between the FastAPI application and MySQL.
-
-The database interaction follows this flow:
+The application uses **MySQL** with SQLAlchemy.
 
 ```text
 FastAPI
@@ -255,289 +191,634 @@ PyMySQL
    ↓
 MySQL
    ↓
-Product Table
+product table
 ```
 
-### Database Configuration
+Database configuration is supplied through environment variables.
 
-The database connection is configured in:
+The Kubernetes deployment uses a Kubernetes Secret for database credentials.
+
+**Database passwords and actual Secret values are not committed to GitHub.**
+
+---
+
+# 6. Docker
+
+The FastAPI application is packaged into a Docker image.
+
+### Dockerfile
+
+The image:
+
+1. Uses Python 3.14
+2. Creates `/app` as the working directory
+3. Installs Python dependencies
+4. Copies the FastAPI application
+5. Exposes port `8000`
+6. Starts Uvicorn
+
+### Build Image
+
+```bash
+docker build -t fastapi-app:latest .
+```
+
+### Run Container
+
+```bash
+docker run -p 8000:8000 fastapi-app:latest
+```
+
+### Docker Image
+
+The application image is published as:
 
 ```text
-frontend/database.py
+iqlas22/fastapi-app
 ```
 
-SQLAlchemy creates a database engine using the MySQL connection URL.
+---
 
-The application then uses a SQLAlchemy session to perform database operations such as:
+# 7. Kubernetes
 
-* Reading products
-* Adding products
-* Updating products
-* Deleting products
-
-### Database Model
-
-The SQLAlchemy database model is defined in:
+The application is deployed into the Kubernetes namespace:
 
 ```text
-frontend/database_models.py
+api
 ```
 
-The `Product` model represents the `product` table in MySQL.
-
-The table contains the following columns:
-
-| Column        | Type    | Description                               |
-| ------------- | ------- | ----------------------------------------- |
-| `id`          | Integer | Primary key and unique product identifier |
-| `name`        | String  | Product name                              |
-| `description` | String  | Product description                       |
-| `price`       | Float   | Product price                             |
-| `quantity`    | Integer | Available product quantity                |
-
-### Pydantic Model vs SQLAlchemy Model
-
-The project uses two `Product` models for different purposes.
-
-| Model                | File                 | Purpose                       |
-| -------------------- | -------------------- | ----------------------------- |
-| Pydantic `Product`   | `models.py`          | Validates API request data    |
-| SQLAlchemy `Product` | `database_models.py` | Represents the database table |
-
-The conversion between them is performed using:
-
-```python
-database_models.Product(
-    **product.model_dump()
-)
-```
-
-Conceptually:
+### Main Kubernetes Components
 
 ```text
-Client JSON
-     ↓
-Pydantic Product
-     ↓
-Validation
-     ↓
-product.model_dump()
-     ↓
-Python Dictionary
-     ↓
-SQLAlchemy Product
-     ↓
+FastAPI
+ ├── Deployment
+ ├── Service
+ ├── Ingress
+ ├── HPA
+ └── Health Probes
+
 MySQL
+ ├── StatefulSet
+ ├── Service
+ ├── PVC
+ └── PV
 ```
 
-### Database Session
+---
 
-The FastAPI application creates database sessions through the `get_db()` dependency.
+# 8. MySQL Persistent Storage
 
-```python
-def get_db():
-    db = session()
-
-    try:
-        yield db
-
-    finally:
-        db.close()
-```
-
-The session is provided to API endpoints using FastAPI's dependency injection:
-
-```python
-db: Session = Depends(get_db)
-```
-
-After the API operation is completed, the database session is closed.
-
-This helps prevent database connections from remaining open unnecessarily.
-
-> **Note:** The current learning project contains local database configuration. In a production application, database credentials should be stored in environment variables rather than committed directly to source code.
-
-
-## Installation & Setup
-
-### 1. Clone the Repository
-
-Clone the GitHub repository:
-
-```bash
-git clone https://github.com/Iqlas02/Fast_API-Project.git
-```
-
-Move into the project directory:
-
-```bash
-cd Fast_API-Project
-```
-
-### 2. Create a Python Virtual Environment
-
-Create a virtual environment:
-
-```bash
-python3 -m venv myenv
-```
-
-Activate it on macOS/Linux:
-
-```bash
-source myenv/bin/activate
-```
-
-After activation, the terminal should show something similar to:
+MySQL uses persistent storage so that database data is not tied only to the lifecycle of the Pod.
 
 ```text
-(myenv)
+MySQL Pod
+   ↓
+PVC: mysql-pvc
+   ↓
+PV: mysql-pv
+   ↓
+/data/mysql
 ```
 
-### 3. Install Python Dependencies
+### Storage Configuration
 
-Install the required Python packages:
+| Resource       | Configuration |
+| -------------- | ------------- |
+| Storage        | 5Gi           |
+| Access Mode    | ReadWriteOnce |
+| Storage Class  | manual        |
+| Reclaim Policy | Retain        |
+| Storage Type   | Local         |
+| Node           | worker-1      |
+
+The PV uses node affinity so that the MySQL Pod runs on the node containing its local storage.
+
+---
+
+# 9. FastAPI Deployment
+
+The original Kubernetes Deployment is maintained under:
+
+```text
+kubernetes/fastapi/deployment.yaml
+```
+
+The application image used by the raw Deployment is:
+
+```text
+iqlas22/fastapi-app:day2-v2
+```
+
+The Deployment connects to MySQL through the Kubernetes Service:
+
+```text
+DB_HOST=mysql
+DB_PORT=3306
+```
+
+Kubernetes DNS resolves:
+
+```text
+mysql
+```
+
+to the MySQL Service.
+
+The application therefore does not connect directly to the MySQL Pod IP.
+
+---
+
+# 10. Helm Deployment
+
+The FastAPI application is currently managed using Helm.
+
+Helm chart:
+
+```text
+helm/fastapi/
+```
+
+The chart contains:
+
+```text
+Chart.yaml
+values.yaml
+templates/
+├── deployment.yaml
+├── service.yaml
+├── ingress.yaml
+├── hpa.yaml
+├── _helpers.tpl
+└── tests/
+```
+
+### Why Helm?
+
+Helm allows Kubernetes resources to be managed as a single application package.
+
+Instead of manually maintaining multiple Kubernetes YAML files, configuration can be controlled through:
+
+```text
+values.yaml
+```
+
+and Kubernetes resources are generated from:
+
+```text
+templates/
+```
+
+---
+
+# 11. Helm Configuration
+
+Current important values:
+
+```yaml
+image:
+  repository: iqlas22/fastapi-app
+  tag: day2-v3
+
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+```
+
+---
+
+# 12. Helm Commands
+
+### Validate Chart
 
 ```bash
-pip install -r requirements.txt
+helm lint ./helm/fastapi
 ```
 
-The main backend dependencies include:
-
-* FastAPI
-* Uvicorn
-* Pydantic
-* SQLAlchemy
-* PyMySQL
-* python-dotenv
-
-### 4. Configure MySQL
-
-Make sure a MySQL Server is installed and running.
-
-Create a database named:
-
-```text
-fast_api
-```
-
-The application uses MySQL through SQLAlchemy and PyMySQL.
-
-> **Important:** Database credentials should be configured locally and should not be committed to GitHub.
-
-### 5. Configure the Database Connection
-
-The database connection is configured in:
-
-```text
-frontend/database.py
-```
-
-For a local setup, use your own MySQL username, password, host, port, and database name.
-
-Do not use another developer's database credentials.
-
-### 6. Start the FastAPI Backend
-
-From the project root directory, run:
+### Preview Generated Kubernetes YAML
 
 ```bash
-uvicorn frontend.main:app --reload
+helm template fastapi-release ./helm/fastapi -n api
 ```
 
-The FastAPI backend will be available at:
-
-```text
-http://127.0.0.1:8000
-```
-
-FastAPI's interactive Swagger documentation is available at:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
-### 7. Start the React Frontend
-
-Open another terminal window.
-
-Navigate to the React application:
+### Install
 
 ```bash
-cd frontend
+helm install fastapi-release ./helm/fastapi -n api
 ```
 
-Install the frontend dependencies:
+### Upgrade
 
 ```bash
-npm install
+helm upgrade fastapi-release ./helm/fastapi -n api
 ```
 
-Start the React development server:
+### Check Release
 
 ```bash
-npm start
+helm status fastapi-release -n api
 ```
 
-The React frontend will normally be available at:
+### View History
+
+```bash
+helm history fastapi-release -n api
+```
+
+### Rollback
+
+```bash
+helm rollback fastapi-release <REVISION> -n api
+```
+
+---
+
+# 13. Kubernetes Service
+
+The FastAPI application uses a **ClusterIP Service**.
+
+```yaml
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+```
+
+The Service provides a stable internal endpoint for the FastAPI Pods.
 
 ```text
-http://localhost:3000
+Ingress
+   ↓
+FastAPI ClusterIP Service
+   ↓
+FastAPI Pods
 ```
 
-### 8. Application Architecture
+The Service automatically distributes traffic between the available FastAPI Pods.
 
-Once both servers are running, the application works approximately as follows:
+---
+
+# 14. Ingress
+
+The application is exposed through an NGINX Ingress.
+
+Host:
 
 ```text
-                  Browser
-                     │
-                     ▼
-          React Frontend
-        http://localhost:3000
-                     │
-                     │ HTTP / Axios
-                     ▼
-           FastAPI Backend
-        http://127.0.0.1:8000
-                     │
-                     ▼
-                SQLAlchemy
-                     │
-                     ▼
-                  MySQL
-                     │
-                     ▼
-               Product Table
+fastapi.local
 ```
 
-### 9. Stopping the Servers
-
-To stop a running development server, press:
+Traffic flow:
 
 ```text
-Ctrl + C
+Client
+   ↓
+NGINX Ingress
+   ↓
+fastapi.local
+   ↓
+FastAPI ClusterIP Service
+   ↓
+FastAPI Pods
 ```
 
-This stops the local server process.
+Ingress provides HTTP routing without requiring the FastAPI Service itself to be exposed as a NodePort.
 
-The server can be started again using the corresponding command.
+---
 
-## Development Notes
+# 15. Health Probes
 
-This project was created as a learning/practice project to understand:
+The FastAPI Deployment uses Kubernetes health probes.
 
-* FastAPI application structure
-* REST API development
-* CRUD operations
-* Pydantic data validation
-* FastAPI dependency injection
-* SQLAlchemy ORM
-* MySQL database connectivity
-* React frontend integration
-* Axios HTTP requests
-* CORS configuration
-* Git and GitHub workflow
+### Liveness Probe
 
+```yaml
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+```
 
+The liveness probe checks whether the application is still functioning.
 
+If the container repeatedly fails its liveness check, Kubernetes can restart the container.
+
+### Readiness Probe
+
+```yaml
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+```
+
+The readiness probe checks whether the Pod is ready to receive traffic.
+
+If readiness fails, Kubernetes removes the Pod from the Service's available endpoints until it becomes ready again.
+
+### Verify Probes
+
+```bash
+kubectl describe deployment fastapi-release -n api
+```
+
+Or:
+
+```bash
+kubectl describe pod <pod-name> -n api
+```
+
+Check Kubernetes events with:
+
+```bash
+kubectl get events -n api
+```
+
+---
+
+# 16. Horizontal Pod Autoscaler
+
+The FastAPI application uses Kubernetes HPA.
+
+Current configuration:
+
+```text
+Minimum replicas: 2
+Maximum replicas: 10
+CPU target: 70%
+```
+
+```text
+                 HPA
+                  |
+          Monitors CPU usage
+                  |
+                  v
+            Deployment
+                  |
+          Adjusts replicas
+                  |
+        +---------+---------+
+        |         |         |
+       Pod       Pod       Pod
+```
+
+Important:
+
+> HPA does not directly create Pods. HPA changes the desired replica count of the Deployment, and the Deployment/ReplicaSet creates or removes Pods.
+
+### Check HPA
+
+```bash
+kubectl get hpa -n api
+```
+
+Detailed information:
+
+```bash
+kubectl describe hpa fastapi-release -n api
+```
+
+---
+
+# 17. Worker Node Scheduling
+
+The FastAPI Pods are scheduled across available worker nodes by the Kubernetes scheduler.
+
+Example:
+
+```text
+worker-1
+ └── FastAPI Pod
+
+worker-2
+ └── available
+
+worker-3
+ └── FastAPI Pod
+
+worker-4
+ └── available
+```
+
+No specific worker node is required for FastAPI.
+
+The Kubernetes scheduler selects an eligible node based on available resources and scheduling rules.
+
+MySQL is different because its local PV has node affinity to `worker-1`.
+
+---
+
+# 18. Useful Verification Commands
+
+### Check Nodes
+
+```bash
+kubectl get nodes -o wide
+```
+
+### Check All Application Resources
+
+```bash
+kubectl get all -n api
+```
+
+### Check Pods
+
+```bash
+kubectl get pods -n api -o wide
+```
+
+### Check Services
+
+```bash
+kubectl get svc -n api
+```
+
+### Check Ingress
+
+```bash
+kubectl get ingress -n api
+```
+
+### Check HPA
+
+```bash
+kubectl get hpa -n api
+```
+
+### Check Storage
+
+```bash
+kubectl get pv
+kubectl get pvc -n api
+```
+
+### Check Helm
+
+```bash
+helm status fastapi-release -n api
+```
+
+---
+
+# 19. Final Kubernetes Architecture
+
+```text
+                           Client
+                             |
+                             v
+                  NGINX Ingress Controller
+                             |
+                             v
+                    Ingress: fastapi.local
+                             |
+                             v
+                FastAPI ClusterIP Service
+                             |
+                    +--------+--------+
+                    |                 |
+                    v                 v
+              FastAPI Pod       FastAPI Pod
+                    |                 |
+                    +--------+--------+
+                             |
+                             v
+                       MySQL Service
+                             |
+                             v
+                       MySQL Pod
+                     StatefulSet
+                             |
+                             v
+                        MySQL PVC
+                             |
+                             v
+                         MySQL PV
+                             |
+                             v
+                       /data/mysql
+                         worker-1
+```
+
+---
+
+# 20. Quick Deployment Checklist
+
+### Application
+
+```bash
+kubectl get pods -n api
+```
+
+Expected:
+
+```text
+FastAPI Pods     Running
+MySQL Pod        Running
+```
+
+### Services
+
+```bash
+kubectl get svc -n api
+```
+
+Expected:
+
+```text
+fastapi-release   ClusterIP
+mysql             ClusterIP
+```
+
+### Ingress
+
+```bash
+kubectl get ingress -n api
+```
+
+Expected:
+
+```text
+fastapi.local
+```
+
+### HPA
+
+```bash
+kubectl get hpa -n api
+```
+
+Expected:
+
+```text
+MIN: 2
+MAX: 10
+TARGET: 70% CPU
+```
+
+### Storage
+
+```bash
+kubectl get pv
+kubectl get pvc -n api
+```
+
+Expected:
+
+```text
+PV       Bound
+PVC      Bound
+```
+
+### Helm
+
+```bash
+helm status fastapi-release -n api
+```
+
+Expected:
+
+```text
+STATUS: deployed
+```
+
+---
+
+# 21. Summary
+
+This project demonstrates the complete progression from a local application to a Kubernetes-managed application:
+
+```text
+FastAPI + React
+      ↓
+    MySQL
+      ↓
+   Docker
+      ↓
+ Docker Hub
+      ↓
+ Kubernetes
+      ↓
+ Persistent Storage
+      ↓
+ Kubernetes Services
+      ↓
+ Helm
+      ↓
+ Ingress
+      ↓
+ Health Probes
+      ↓
+ HPA
+      ↓
+ Scalable Application
+```
+
+The final deployment uses **Helm-managed FastAPI Pods**, a **ClusterIP Service**, **NGINX Ingress**, **HPA**, **Kubernetes health probes**, and a **persistent MySQL StatefulSet**.
